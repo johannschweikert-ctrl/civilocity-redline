@@ -1,0 +1,43 @@
+# civilocity-redline .gitattributes
+# Phase 1 Redline Checker — line-ending policy.
+# Authority: RC_Stack_and_Environment_Brief_v1.docx Sections 5.1, 9.3
+#
+# All text source files are stored with LF (Unix) line endings in git.
+# This silences the LF/CRLF churn that arises from Windows checkouts
+# converting LF to CRLF, which previously caused permanent "modified"
+# entries in `git status` after every checkout.
+
+* text=auto eol=lf
+
+# Explicit policy for source-code text formats.
+*.py     text eol=lf
+*.toml   text eol=lf
+*.md     text eol=lf
+*.json   text eol=lf
+*.cfg    text eol=lf
+*.ini    text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.gitignore     text eol=lf
+*.gitattributes text eol=lf
+
+# Windows-native scripts keep CRLF (PowerShell prefers CRLF).
+*.ps1    text eol=crlf
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+
+# Binary types — never normalize.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.bmp    binary
+*.tiff   binary
+*.pdf    binary
+*.docx   binary
+*.doc    binary
+*.xlsx   binary
+*.xls    binary
+*.bfx    binary
+*.zip    binary
+*.gz     binary

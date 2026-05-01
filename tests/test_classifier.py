@@ -46,16 +46,22 @@ MANIFEST_PATH = (
 
 
 # --- Manifest-derived expected dev-set table -----------------------
-# Sourced from RC_Benchmark_Manifest_v1.json. DEV-006 reclassified from
-# pdf_shx_annotation_only to pdf_text_only per D-032 Option 1
-# (2026-05-01) — SHX detection moves to Step 6 CV pipeline.
+# Sourced from RC_Benchmark_Manifest_v1.json. DEV-006 is the canonical
+# pdf_shx_annotation_only example: pdfplot17.hdi flattens SHX glyphs to
+# vector paths in the page content stream rather than producing PDF
+# /Annot objects. Step 2 (which inspects only /Annot via page.annots())
+# cannot detect this; SHX detection is the Step 6 CV pipeline's
+# responsibility. Manifest stores ground truth; the per-file test below
+# xfails DEV-006 with strict=True so the test will surface XPASSED
+# when Step 6 begins correctly classifying it. See D-032 (initial
+# decision) and D-033 (amendment / Option Y), both 2026-05-01.
 EXPECTED_DEV_SET: dict[str, str] = {
     "0635-033 Chelan PUD HDD Redline.pdf": "pdf_text_only",
     "0906-51 Set 12-12-24_60percent w BV Comments.pdf": "pdf_annotated",
     "0906-51 Set 2-25-25 BV Red.pdf": "pdf_text_only",
     "0906-51 Set 2025-01-17 PRV Vault.pdf": "pdf_text_only",
     "0906_OLD_MILL_PARK_COMBINED_SET.pdf": "pdf_annotated",
-    "17-0054 Morcos Civil 03-31-26_REV2.pdf": "pdf_text_only",
+    "17-0054 Morcos Civil 03-31-26_REV2.pdf": "pdf_shx_annotation_only",
     "17-0054 Morcos Civil 04-01-26_Util Plan.pdf": "pdf_annotated",
     "17-0054 Morcos Civil BV Markup.pdf": "pdf_mixed",
     "17-0054 Morcos Civil_REV2 BV Red.pdf": "pdf_text_only",
@@ -65,6 +71,20 @@ EXPECTED_DEV_SET: dict[str, str] = {
     "png_markup_2.png": "N/A (non-PDF)",
     "png_markup_3.png": "N/A (non-PDF)",
     "png_markup_4.png": "N/A (non-PDF)",
+}
+
+# File IDs whose Step 2 classifier output is known to diverge from the
+# manifest's ground-truth pdf_classification. Each entry's value is the
+# xfail reason. strict=True elsewhere ensures XPASSED becomes a failure
+# when the underlying capability gap is closed (e.g. Step 6 lands and
+# its output replaces or augments Step 2 for these files).
+XFAIL_FILE_IDS: dict[str, str] = {
+    "DEV-006": (
+        "Step 2 inspects only PDF /Annot objects and cannot detect "
+        "SHX-flattened-paths in the page content stream; ground-truth "
+        "pdf_shx_annotation_only is reached by the Step 6 CV pipeline. "
+        "See D-033 (2026-05-01)."
+    ),
 }
 
 
@@ -78,6 +98,28 @@ def _load_dev_files_from_manifest() -> list[dict]:
 
 # Loaded at collection time so parametrize can use it.
 DEV_ENTRIES: list[dict] = _load_dev_files_from_manifest()
+
+
+def _build_dev_params() -> list:
+    """Build pytest.param list, applying xfail marker to entries
+    listed in XFAIL_FILE_IDS."""
+    params = []
+    for entry in DEV_ENTRIES:
+        fid = entry["file_id"]
+        if fid in XFAIL_FILE_IDS:
+            params.append(
+                pytest.param(
+                    entry,
+                    id=fid,
+                    marks=pytest.mark.xfail(
+                        reason=XFAIL_FILE_IDS[fid],
+                        strict=True,
+                    ),
+                )
+            )
+        else:
+            params.append(pytest.param(entry, id=fid))
+    return params
 
 
 # --- Manifest integrity --------------------------------------------
@@ -113,12 +155,15 @@ def test_manifest_dev_set_matches_expected_table() -> None:
     not DEV_ENTRIES,
     reason="benchmark manifest empty or missing — cannot parametrize",
 )
-@pytest.mark.parametrize("entry", DEV_ENTRIES, ids=lambda e: e["file_id"])
+@pytest.mark.parametrize("entry", _build_dev_params())
 def test_dev_file_classification_matches_manifest(entry: dict) -> None:
     """Each dev file must classify exactly as the manifest says.
 
     Disagreement is a FAIL, not a skip — manifest is authoritative
-    per S02 clarification (6).
+    per S02 clarification (6) and D-033 (manifest = ground truth).
+    Files in XFAIL_FILE_IDS are expected to diverge in Step 2 because
+    of capability limitations recorded in the Decisions Log; the
+    xfail markers carry strict=True so resolution surfaces as XPASSED.
     """
     path = SAMPLES_DEV / entry["filename"]
     assert path.exists(), f"sample missing on disk: {path}"

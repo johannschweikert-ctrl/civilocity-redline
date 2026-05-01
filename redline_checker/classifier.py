@@ -19,11 +19,14 @@ S02 outcomes produced by this module:
 
 pdf_shx_annotation_only is preserved as a controlled-vocabulary constant
 for downstream consumers but is NOT produced by this classifier, per
-D-032 Option 1: the SHX phenomenon in the dev set (DEV-006) is
-SHX-glyphs-flattened-to-vector-paths in the page content stream, not
-Square-subtype annotation noise. Detecting it requires render-time
-visual analysis, which is the Step 6 CV pipeline's responsibility.
-The Step 2 classifier is structural only.
+D-033 (amends D-032): the SHX phenomenon in DEV-006 is SHX-glyphs-
+flattened-to-vector-paths in the page content stream rather than PDF
+/Annot dictionary entries, which means Step 2 (which inspects only
+/Annot via page.annots()) cannot detect it. The manifest carries the
+ground-truth pdf_shx_annotation_only classification for DEV-006; the
+Step 2 test xfails that file with strict=True. SHX detection at
+render time is the Step 6 CV pipeline's responsibility. The Step 2
+classifier is structural only.
 
 The encrypted, corrupted, and zero-readable-content paths from
 Section 2.3 are deferred to Build Step 2b. PyMuPDF exceptions on
