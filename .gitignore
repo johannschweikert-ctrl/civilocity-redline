@@ -1,32 +1,89 @@
-﻿# Local / environment
+# civilocity-redline .gitignore
+# Phase 1 Redline Checker — Python source code only.
+# Authority: RC_Stack_and_Environment_Brief_v1.docx Sections 5.1, 9.3
+
+# --- Local environment ---
 .env
 .env.*
 *.local
+.python-version
 
-# Dependencies
-node_modules/
-.venv/
-venv/
+# --- Python build / cache / metadata ---
 __pycache__/
 *.pyc
-
-# Build outputs
-.next/
-dist/
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+.eggs/
 build/
-coverage/
-playwright-report/
-test-results/
+dist/
+.installed.cfg
+*.manifest
+*.spec
 
-# Generated outputs if accidentally created inside src
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Test / lint / coverage ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# --- Editor / IDE ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.tmp
+*.bak
+
+# --- OS metadata ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Project-specific exclusions ---
+# These categories are handled outside src\ at the project root.
+# This list is a safety net in case something is mistakenly created inside src\.
 outputs/
 audit/
 samples/
+handoff/
+decisions/
+reference/
+stack/
 
-# Sensitive project files
+# --- Sensitive / generated artifacts (per Stack Brief Section 9.3) ---
+# Never commit project data, sample files, or generated reports.
 *.xlsx
+*.xls
 *.pdf
+*.docx
+*.doc
 *.png
 *.jpg
 *.jpeg
-*.docx
+*.gif
+*.bmp
+*.tiff
+*.bfx
+*.json
+
+# --- Allow specific JSON files that ARE source code ---
+# pyproject.toml settings are TOML, not JSON, so no exception needed.
+# If a future tool requires a tracked JSON config, add an exception here.
